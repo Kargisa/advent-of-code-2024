@@ -11,7 +11,9 @@ endif()
 
 project ("advent-of-code-2024")
 
-add_executable(advent-of-code-2024 "main.cpp")
+add_executable(advent-of-code-2024 "main.cpp" "save_christmas.hpp" "save_christmas.cpp")
+
+file (COPY "inputs" DESTINATION .)
 
 # Include sub-projects.
 # add_subdirectory ("source")

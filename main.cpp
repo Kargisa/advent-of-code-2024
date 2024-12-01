@@ -1,5 +1,6 @@
 #include <iostream>
+#include "save_christmas.hpp"
 
 int main(){
-    std::cout << "Hello World!" << std::endl;
+    day1_2();
 }
