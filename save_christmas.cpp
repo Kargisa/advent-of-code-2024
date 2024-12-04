@@ -281,6 +281,7 @@ void day3_1(){
     }
 
     LOG("result: " << result);
+    stream.close();
 }
 
 void day3_2(){
@@ -337,8 +338,17 @@ void day3_2(){
     }
 
     LOG("result: " << result);
+    stream.close();
 }
 
 void day4_1(){
-    
+    const std::string path = "./inputs/input4_1";
+
+    std::ifstream stream(path);
+    if (!stream.is_open()){
+        LOG("file could not be opened!");
+        return;
+    }
+
+    stream.close();
 }
