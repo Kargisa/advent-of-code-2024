@@ -15,6 +15,8 @@ int main(){
     std::cout << "---\n";
     day3_2();
     std::cout << "---\n";
-#endif
     day4_1();
+    std::cout << "---\n";
+#endif
+    day4_2();
 }

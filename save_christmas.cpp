@@ -6,6 +6,7 @@
 #include <math.h>
 #include <vector>
 #include <regex>
+#include <array>
 
 #define LOG(X) std::cout << X << "\n";
 
@@ -341,6 +342,30 @@ void day3_2(){
     stream.close();
 }
 
+int xmasCheck(size_t y, size_t x, int dirY, int dirX, const std::vector<std::string>& content, const std::array<char, 4> xmas){
+    size_t yNow;
+    size_t xNow;
+    for (size_t i = 0; i < xmas.size(); i++)
+    {
+        yNow = y + dirY * i;
+        xNow = x + dirX * i;
+
+        if (yNow >= content.size()){
+            return 0;
+        }
+        if (xNow >= content[yNow].size()){
+            return 0;
+        }
+
+        char cha = content[yNow][xNow];
+
+        if (cha != xmas[i]){
+            return 0;
+        }
+    }
+    return 1;
+}
+
 void day4_1(){
     const std::string path = "./inputs/input4_1";
 
@@ -350,5 +375,106 @@ void day4_1(){
         return;
     }
 
+    const std::array<char, 4> XMAS = {'X', 'M', 'A', 'S'}; 
+    std::vector<std::string> fileContent;
+
+    std::string line;
+    while(std::getline(stream, line)){
+        fileContent.emplace_back(line);
+    }
+
+    int result = 0;
+
+    for (size_t y = 0; y < fileContent.size(); y++)
+    {
+        for (size_t x = 0; x < fileContent[y].size(); x++)
+        {
+            for (int dirY = -1; dirY < 2; dirY++)
+            {
+                for (int dirX = -1; dirX < 2; dirX++)
+                {
+                    if (dirY == 0 && dirX == 0){
+                        continue;
+                    }
+                    result += xmasCheck(y, x, dirY, dirX, fileContent, XMAS);
+                }
+            }
+        }
+    }
+
+    LOG("amount of XMAS: " << result);
     stream.close();
 }
+
+bool masCheck(size_t y, size_t x, int dirY, int dirX, const std::vector<std::string>& content){
+
+    bool hasM = false;
+    bool hasS = false;
+
+    for (int i = -1; i < 2; i++)
+    {
+        if (i == 0){
+            continue;
+        }
+
+        size_t yNow = y + dirY * i;
+        size_t xNow = x + dirX * i;
+
+        if (yNow >= content.size()){
+            return false;
+        }
+
+        if (xNow >= content[yNow].size()){
+            return false;
+        }
+
+        char cha = content[yNow][xNow];
+        if (cha == 'M'){
+            hasM = true;
+        }
+        else if (cha == 'S'){
+            hasS = true;
+        }
+    }
+
+    return hasM && hasS;
+}
+
+void day4_2(){
+    const std::string path = "./inputs/input4_2";
+    
+    std::ifstream stream(path);
+    if (!stream.is_open()){
+        LOG("file could not be opened!");
+        return;
+    }
+
+    std::vector<std::string> fileContent;
+
+    std::string line;
+    while(std::getline(stream, line)){
+        fileContent.emplace_back(line);
+    }
+
+    int result = 0;
+    for (size_t y = 0; y < fileContent.size(); y++)
+    {
+        for (size_t x = 0; x < fileContent[y].size(); x++)
+        {
+            if (fileContent[y][x] != 'A'){
+                continue;
+            }
+
+            bool check1 = masCheck(y, x, 1, 1, fileContent);
+            bool check2 = masCheck(y, x, 1, -1, fileContent);
+            result += ((check1 && check2) ? 1 : 0);
+        }
+    }    
+
+    LOG("amount of X-MAS: " << result);
+    stream.close();
+}
+
+
+
+
