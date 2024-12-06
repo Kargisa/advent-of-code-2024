@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <string>
 #include <set>
 #include <unordered_map>
@@ -7,8 +8,21 @@
 #include <vector>
 #include <regex>
 #include <array>
+#include <unordered_set>
+#include <tuple>
 
 #define LOG(X) std::cout << X << "\n";
+
+template<typename T>
+std::string strigifyVector(const std::vector<T>& vec, char delimiter = ' '){
+    std::string str = "";
+    for (size_t i = 0; i < vec.size(); i++)
+    {
+        str += std::to_string(vec[i]) + delimiter;
+    }
+    return str;
+}
+
 
 void day1_1(){
     LOG("Day1_1 :3");
@@ -474,6 +488,201 @@ void day4_2(){
     LOG("amount of X-MAS: " << result);
     stream.close();
 }
+
+void day5_1(){
+    const std::string path = "./inputs/input5_1";
+
+    std::ifstream stream(path);
+    if(!stream.is_open()){
+        LOG("file could not be opened!");
+        return;
+    }
+
+    std::string line;
+    std::vector<std::tuple<int, int>> rules;
+
+    int l;
+    int r;
+    char delimiter = '|';
+    while(std::getline(stream, line)){
+        std::istringstream lineStream(line);
+        if (lineStream >> l >> delimiter >> r){
+            rules.emplace_back(l, r);
+            continue;
+        }
+        break;
+    }
+
+    int result = 0;
+
+    std::unordered_set<int> lineSet;
+    std::vector<int> numbersInLine;
+    while (std::getline(stream, line))
+    {
+        std::string currentSegment = "";
+        for (size_t i = 0; i < line.size(); i++)
+        {
+            if (line[i] != ','){
+                currentSegment += line[i];
+                if (line.size() - 1 != i){
+                    continue;
+                }
+            }
+
+            int number = std::stoi(currentSegment);
+            numbersInLine.emplace_back(number);
+            lineSet.emplace(number);
+            currentSegment = "";
+        }
+
+        for (size_t i = 0; i < rules.size(); i++)
+        {
+            int first = std::get<0>(rules[i]);
+            int second = std::get<1>(rules[i]);
+
+            if (!lineSet.contains(first) || !lineSet.contains(second)){
+                continue;
+            }
+
+            for (size_t i = 0; i < numbersInLine.size(); i++)
+            {
+                if (numbersInLine[i] == first){
+                    break;
+                }
+                else if (numbersInLine[i] == second){
+                    //breaks outer loop and skips result addition!
+                    goto WRONG;
+                }
+            }
+        }
+
+        result += numbersInLine[(numbersInLine.size()) / 2];
+
+    WRONG:
+        numbersInLine.clear();
+        lineSet.clear();
+    }
+    
+    LOG("result: " << result);
+    stream.close();
+}
+
+bool swapCondition(int a, int b, std::unordered_map<int, std::unordered_set<int>>& rules){
+    if (rules.contains(b)){
+        if (rules[b].contains(a)){
+            return true;
+        }
+    }
+    return false;
+}
+
+bool isCorrect(const std::vector<int>& numbersInLine, std::unordered_map<int, std::unordered_set<int>>& rules){
+    auto begin = numbersInLine.begin();
+    auto end = numbersInLine.end();
+    for (size_t i = 0; i < numbersInLine.size(); i++)
+    {
+        if (!rules.contains(numbersInLine[i])){
+            continue;
+        }
+
+        for (auto &&rule : rules[numbersInLine[i]])
+        {
+            auto iterator = std::find(begin, end, rule);
+            int index = std::distance(begin, iterator);
+
+            if (index < i){
+                return false;
+            }                                
+        }
+    }
+
+    return true;
+}
+
+//TODO: look into this:
+void day5_2(){
+    const std::string path = "./inputs/input5_2";
+
+    std::ifstream stream(path);
+    if(!stream.is_open()){
+        LOG("file could not be opened!");
+        return;
+    }
+
+    std::string line;
+    std::unordered_map<int, std::unordered_set<int>> rules;
+
+    int l;
+    int r;
+    char delimiter = '|';
+    while(std::getline(stream, line)){
+        std::istringstream lineStream(line);
+        if (lineStream >> l >> delimiter >> r){
+            if (rules.contains(l)){
+                rules[l].emplace(r);
+            }
+            else{
+                rules[l] = {r};
+            }
+
+            continue;
+        }
+        break;
+    }
+
+    int result = 0;
+
+    std::unordered_set<int> lineSet;
+    std::vector<int> numbersInLine;
+    while (std::getline(stream, line))
+    {
+        std::string currentSegment = "";
+        for (size_t i = 0; i < line.size(); i++)
+        {
+            if (line[i] != ','){
+                currentSegment += line[i];
+                if (line.size() - 1 != i){
+                    continue;
+                }
+            }
+
+            int number = std::stoi(currentSegment);
+            numbersInLine.emplace_back(number);
+            lineSet.emplace(number);
+            currentSegment = "";
+        }
+
+        bool correct = isCorrect(numbersInLine, rules);
+
+        if (!correct){
+            int n = numbersInLine.size();
+
+            // ASS
+            for (int i = 0; i < n - 1; i++) {
+                for (int j = 0; j < n - i - 1; j++) {
+                    if (swapCondition(numbersInLine[j], numbersInLine[j + 1], rules)){
+                        std::swap(numbersInLine[j], numbersInLine[j + 1]);
+                    }
+                }
+                
+            }
+
+            // LOG(strigifyVector(numbersInLine));
+            result += numbersInLine[(numbersInLine.size()) / 2];
+
+        }
+
+        numbersInLine.clear();
+        lineSet.clear();
+    }
+    
+    LOG("result: " << result);
+    stream.close();
+}
+
+
+
+
 
 
 
