@@ -680,6 +680,313 @@ void day5_2(){
     stream.close();
 }
 
+struct Position{
+    size_t x;
+    size_t y;
+
+    Position(size_t posY, size_t posX) 
+        : x(posX), y(posY){}
+    
+    Position(const Position& pos){
+        x = pos.x;
+        y = pos.y;
+    }
+
+    bool operator==(const Position& other) const{
+        return (x == other.x && y == other.y);
+    }
+};
+
+struct Guard{
+    Position pos = {0,0};
+    int dirX = 0;
+    int dirY = -1;
+
+    Guard(){}
+
+    Guard(const Guard& guard){
+        pos = guard.pos;
+        dirX = guard.dirX;
+        dirY = guard.dirY;
+    }
+
+    void rotate90(){
+        if (dirX == 1){
+            dirX = 0;
+            dirY = 1;
+        }
+        else if (dirX == -1){
+            dirX = 0;
+            dirY = -1;
+        }
+        else if (dirY == 1){
+            dirY = 0;
+            dirX = -1;
+        }
+        else if (dirY == -1){
+            dirY = 0;
+            dirX = 1;
+        }
+    }
+
+    char directionChar(){
+        switch (dirX)
+        {
+        case 1:
+            return '>';
+        
+        case -1:
+            return '<';
+        }
+        switch (dirY)
+        {
+        case 1:
+            return 'v';
+        
+        case -1:
+            return '^';
+
+        default:
+            return 'X';
+        }
+    }
+
+    bool operator==(const Guard& other) const{
+        return (pos == other.pos && dirX == other.dirX && dirY == other.dirY);
+    }
+};
+
+namespace std{
+    template<>
+    struct hash<Position>{
+        size_t operator()(const Position& pos) const{
+            return (hash<size_t>{}(pos.x) ^ hash<size_t>{}(pos.y));
+        }
+    };
+
+    template<>
+    struct hash<Guard>{
+        size_t operator()(const Guard& guard) const{
+            return (hash<Position>{}(guard.pos) ^ hash<int>{}(guard.dirX) ^ hash<int>{}(guard.dirY));
+        }
+    };
+};
+
+void day6_1(){
+    const std::string path = "./inputs/input6_1";
+
+    std::ifstream stream(path);
+    if(!stream.is_open()){
+        LOG("file could not be opened!");
+        return;
+    }
+
+    const char obstacle = '#';
+    const char emtySpace = '.';
+    const char guardChar = '^';
+
+    std::vector<std::string> fileContent;
+    Guard guard;
+
+    std::string line;
+    size_t currentLine = 0;
+    bool guardFound = false;
+
+    std::unordered_set<Position> visitedPositions;
+    while(std::getline(stream, line)){
+
+        if (!guardFound){
+            size_t pos = line.find(guardChar);
+            if (pos != std::string::npos){
+                guard.pos = {currentLine, pos};
+                guardFound = true;
+            } 
+        }
+        fileContent.emplace_back(line);
+        currentLine++;
+    }
+
+    int result = 1;
+    visitedPositions.insert(guard.pos);
+    while(true){
+        Position nextPos(guard.pos.y + guard.dirY, guard.pos.x + guard.dirX);
+        if (nextPos.y >= fileContent.size()){
+            break;
+        }
+        if (nextPos.x >= fileContent[nextPos.y].size()){
+            break;
+        }
+
+        char nextChar = fileContent[nextPos.y][nextPos.x];
+        if (nextChar != obstacle){
+            guard.pos = nextPos;
+            if (!visitedPositions.contains(guard.pos)){
+                visitedPositions.insert(guard.pos);
+                result++;
+            }
+            continue;
+        }
+
+        guard.rotate90();
+    }
+
+    LOG("result: " << result);
+    stream.close();
+}
+
+//INFO: 6_2 does not work I DON'T KNOW WHY
+
+int checkLoop(Guard guard, Position obstaclePos, const std::vector<std::string>& map){
+    std::unordered_set<Guard> oldGuards;
+    oldGuards.insert(guard);
+
+    size_t mapY = map.size();
+    size_t mapX = map[0].size();
+
+    while(true){
+        Position nextPos(guard.pos.y + guard.dirY, guard.pos.x + guard.dirX);
+        if (nextPos.y >= mapY){
+            return 0;
+        }
+        if (nextPos.x >= mapX){
+            return 0;
+        }
+
+        char nextChar = map[nextPos.y][nextPos.x];
+
+        if (nextPos == obstaclePos){
+            nextChar = '#';
+        }
+
+        if (nextChar != '#'){
+            guard.pos = nextPos;
+
+            if (oldGuards.contains(guard)){
+                return 1;
+            }
+
+            oldGuards.insert(guard);
+            continue;
+        }
+
+        guard.rotate90();
+        
+        if (oldGuards.contains(guard)){
+            return 1;
+        }
+
+        oldGuards.insert(guard);
+    }
+
+    return 0;
+}
+
+void day6_2(){
+    const std::string path = "./inputs/input6_2";
+
+    std::ifstream stream(path);
+    if(!stream.is_open()){
+        LOG("file could not be opened!");
+        return;
+    }
+
+    const char obstacle = '#';
+    const char emtySpace = '.';
+    const char guardChar = '^';
+
+    std::vector<std::string> fileContent;
+    Guard guard;
+
+    std::string line;
+    size_t currentLine = 0;
+    bool guardFound = false;
+
+    while(std::getline(stream, line)){
+
+        if (!guardFound){
+            size_t pos = line.find(guardChar);
+            if (pos != std::string::npos){
+                guard.pos = {currentLine, pos};
+                guardFound = true;
+            } 
+        }
+        fileContent.emplace_back(line);
+        currentLine++;
+    }
+
+    std::unordered_set<Position> usedObstaclePosition;
+    int result = 0;
+    while(true){
+        Position nextPos(guard.pos.y + guard.dirY, guard.pos.x + guard.dirX);
+        if (nextPos.y >= fileContent.size()){
+            break;
+        }
+        if (nextPos.x >= fileContent[nextPos.y].size()){
+            break;
+        }
+
+        char nextChar = fileContent[nextPos.y][nextPos.x];
+        if (nextChar != obstacle){
+
+            if (!usedObstaclePosition.contains(nextPos)){
+                result += checkLoop(guard, nextPos, fileContent);
+                usedObstaclePosition.insert(nextPos);
+            }
+
+            guard.pos = nextPos;
+            continue;
+        }
+
+        guard.rotate90();
+    }
+    LOG("result: " << result);
+    stream.close();
+}
+
+void day7_1(){
+    const std::string path = "./inputs/input7";
+
+    std::ifstream stream(path);
+    if(!stream.is_open()){
+        LOG("file could not be opened!");
+        return;
+    }
+
+    std::array<char, 2> operators = {'+', '*'};
+    std::string line;
+    while(std::getline(stream, line))
+    {
+        std::string split;
+        int index = 0;
+
+        int testResult;
+        int equationResult = 0;
+
+        std::istringstream iss(line);
+        char firstDelimiter = ':';
+        char secondDelimiter = ' ';
+        while (std::getline(iss, split, firstDelimiter)) {
+            if(index == 0){
+                testResult = std::stoi(split);
+                index++;
+                continue;
+            }
+
+            std::string number;
+            std::istringstream numiss(split);
+            
+        }
+    }
+
+    stream.close();
+}
+
+void day7_2(){
+    LOG("NOT IMPLENETED!");
+}
+
+
+
 
 
 

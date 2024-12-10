@@ -21,6 +21,14 @@ int main(){
     std::cout << "---\n";
     day5_1();
     std::cout << "---\n";
-#endif
     day5_2();
+    std::cout << "---\n";
+    day6_1();
+    std::cout << "---\n";
+    std::cout << "---\n";
+    day7_1();
+    std::cout << "---\n";
+    day7_2();
+#endif
+    day6_2();
 }

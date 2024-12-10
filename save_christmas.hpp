@@ -10,3 +10,7 @@ void day4_1();
 void day4_2();
 void day5_1();
 void day5_2();
+void day6_1();
+void day6_2();
+void day7_1();
+void day7_2();
